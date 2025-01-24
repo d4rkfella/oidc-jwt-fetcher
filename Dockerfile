@@ -7,6 +7,7 @@ RUN addgroup -g ${GROUP_UID} -S tokencrew
 RUN adduser -u ${USER_UID} -G tokencrew -S tokenmaster
 RUN apk update && apk add --no-cache \
     curl \
+    ca-certificates \
     jq \
     bash \
     kubectl
