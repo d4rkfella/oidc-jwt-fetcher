@@ -5,7 +5,6 @@ ARG GROUP_UID=65532
 
 RUN addgroup -g ${GROUP_UID} -S tokencrew
 RUN adduser -u ${USER_UID} -G ${GROUP_UID} -S tokenmaster
-
 RUN apk update && apk add --no-cache \
     curl \
     jq \
