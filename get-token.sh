@@ -4,7 +4,7 @@ if [[ -z "$KEYCLOAK_URL" ]]; then
   echo "Error: KEYCLOAK_URL is not set."
   exit 1
 fi
-
+test
 if [[ -z "$CLIENT_ID" ]]; then
   echo "Error: CLIENT_ID is not set."
   exit 1
