@@ -7,10 +7,5 @@ TOKEN=$(curl -X POST "$KEYCLOAK_URL" \
   -d "scope=$SCOPE" \
   -H "Content-Type: application/x-www-form-urlencoded" | jq -r .access_token)
 
-echo -e "apiVersion: v1
-kind: Secret
-metadata:
-  name: oidc-jwt
-stringData:
-  headers: |
-    Authorization: Bearer $TOKEN" | kubectl apply -f -
+kubectl create secret oidc-jwt \
+--from-literal=token=$TOKEN
