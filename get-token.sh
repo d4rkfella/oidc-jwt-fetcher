@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Get the OIDC token
 TOKEN=$(curl -X POST "$KEYCLOAK_URL" \
   -d "client_id=$CLIENT_ID" \
   -d "client_secret=$CLIENT_SECRET" \
