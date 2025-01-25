@@ -7,5 +7,5 @@ TOKEN=$(curl -X POST "$KEYCLOAK_URL" \
   -d "scope=$SCOPE" \
   -H "Content-Type: application/x-www-form-urlencoded" | jq -r .access_token)
 
-kubectl create secret oidc-jwt \
+kubectl create secret generic oidc-jwt \
 --from-literal=token=$TOKEN
