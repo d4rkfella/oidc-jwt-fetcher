@@ -16,13 +16,13 @@ if [[ ! -f "$CLIENT_SECRET_FILE" ]]; then
 fi
 
 if [[ -z "$SCOPE" ]]; then
-  TOKEN=$(curl -sS -X POST "$KEYCLOAK_URL" \
+  TOKEN=$(curl -s -X POST "$KEYCLOAK_URL" \
     -d "client_id=$CLIENT_ID" \
     -d "client_secret=$(cat "$CLIENT_SECRET_FILE")" \
     -d "grant_type=client_credentials" \
     -H "Content-Type: application/x-www-form-urlencoded" | jq -r .access_token)
 else
-  TOKEN=$(curl -sS -X POST "$KEYCLOAK_URL" \
+  TOKEN=$(curl -s -X POST "$KEYCLOAK_URL" \
     -d "client_id=$CLIENT_ID" \
     -d "client_secret=$(cat "$CLIENT_SECRET_FILE")" \
     -d "grant_type=client_credentials" \
