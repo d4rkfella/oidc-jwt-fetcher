@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ -z "${$TOKEN_ENDPOINT_URL}"         ||
+if [[ -z "${TOKEN_ENDPOINT_URL}"         ||
       -z "${CLIENT_ID}"
 ]]; then
     printf "\e[1;32m%-6s\e[m\n" "Invalid configuration - missing a required environment variable"
