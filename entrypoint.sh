@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z "${$KEYCLOAK_URL}"         ||
-      -z "${CLIENT_ID}"             ||
+      -z "${CLIENT_ID}"
 ]]; then
     printf "\e[1;32m%-6s\e[m\n" "Invalid configuration - missing a required environment variable"
     [[ -z "${KEYCLOAK_URL}" ]]             && printf "\e[1;32m%-6s\e[m\n" "KEYCLOAK_URL: unset"
