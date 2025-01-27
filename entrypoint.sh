@@ -1,17 +1,16 @@
 #!/bin/bash
 
-if [[ -z "$KEYCLOAK_URL" ]]; then
-  echo "Error: KEYCLOAK_URL is not set."
-  exit 1
-fi
-
-if [[ -z "$CLIENT_ID" ]]; then
-  echo "Error: CLIENT_ID is not set."
-  exit 1
+if [[ -z "${$KEYCLOAK_URL}"         ||
+      -z "${CLIENT_ID}"             ||
+]]; then
+    printf "\e[1;32m%-6s\e[m\n" "Invalid configuration - missing a required environment variable"
+    [[ -z "${KEYCLOAK_URL}" ]]             && printf "\e[1;32m%-6s\e[m\n" "KEYCLOAK_URL: unset"
+    [[ -z "${CLIENT_ID}" ]]                && printf "\e[1;32m%-6s\e[m\n" "CLIENT_ID: unset"
+    exit 1
 fi
 
 if [[ ! -f "$CLIENT_SECRET_FILE" ]]; then
-  echo "Error: CLIENT_SECRET_FILE does not exist or is not accessible at $CLIENT_SECRET_FILE."
+  printf "\e[1;32m%-6s\e[m\n" "CLIENT_SECRET_FILE does not exist or is not accessible at $CLIENT_SECRET_FILE"
   exit 1
 fi
 
@@ -31,7 +30,7 @@ else
 fi
 
 if [[ -z "$TOKEN" ]]; then
-  echo "Error: Failed to retrieve the OIDC token. Please check the provided credentials."
+  printf "\e[1;32m%-6s\e[m\n" "Failed to retrieve the OIDC token. Please check the provided credentials."
   exit 1
 fi
 
