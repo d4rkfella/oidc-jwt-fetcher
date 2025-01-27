@@ -13,6 +13,8 @@ RUN apk update && apk add --no-cache \
 
 COPY entrypoint.sh /entrypoint.sh
 
+RUN chmod +x /entrypoint.sh
+
 USER nobody:nogroup
 
 ENTRYPOINT ["/usr/bin/catatonit", "--", "/entrypoint.sh"]
