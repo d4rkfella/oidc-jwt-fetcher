@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ -z "${TOKEN_ENDPOINT_URL}"         ||
-      -z "${CLIENT_ID}"
-]]; then
+if [[ -z "${TOKEN_ENDPOINT_URL}" || -z "${CLIENT_ID}" || ! -f "$CLIENT_SECRET_FILE" ]]; then
     printf "\e[1;32m%-6s\e[m\n" "Invalid configuration - missing a required environment variable"
     [[ -z "${TOKEN_ENDPOINT_URL}" ]]       && printf "\e[1;32m%-6s\e[m\n" "TOKEN_ENDPOINT_URL: unset"
     [[ -z "${CLIENT_ID}" ]]                && printf "\e[1;32m%-6s\e[m\n" "CLIENT_ID: unset"
+    [[ ! -f "$CLIENT_SECRET_FILE" ]]       && printf "\e[1;32m%-6s\e[m\n" "CLIENT_SECRET_FILE does not exist or is not accessible at $CLIENT_SECRET_FILE"
     exit 1
-fi
-
-if [[ ! -f "$CLIENT_SECRET_FILE" ]]; then
-  printf "\e[1;32m%-6s\e[m\n" "CLIENT_SECRET_FILE does not exist or is not accessible at $CLIENT_SECRET_FILE"
-  exit 1
 fi
 
 if [[ -z "$SCOPE" ]]; then
