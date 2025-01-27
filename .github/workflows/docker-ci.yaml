@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'Dockerfile'
-      - 'get-token.sh'
+      - 'entrypoint.sh'
 
 jobs:
   build:
