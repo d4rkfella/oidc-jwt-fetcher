@@ -12,7 +12,6 @@ RUN apk update && apk add --no-cache \
     kubectl
 
 COPY entrypoint.sh /entrypoint.sh
-
 RUN chmod +x /entrypoint.sh
 
 USER nobody:nogroup
