@@ -11,13 +11,13 @@ fi
 if [[ -z "$SCOPE" ]]; then
   TOKEN=$(curl -sS -X POST "$TOKEN_ENDPOINT_URL" \
     -d "client_id=$CLIENT_ID" \
-    -d "client_secret=$(cat "$CLIENT_SECRET_FILE")" \
+    -d "client_secret=$(< "$CLIENT_SECRET_FILE")" \
     -d "grant_type=client_credentials" \
     -H "Content-Type: application/x-www-form-urlencoded" | jq -r .access_token)
 else
   TOKEN=$(curl -sS -X POST "$TOKEN_ENDPOINT_URL" \
     -d "client_id=$CLIENT_ID" \
-    -d "client_secret=$(cat "$CLIENT_SECRET_FILE")" \
+    -d "client_secret=$(< "$CLIENT_SECRET_FILE")" \
     -d "grant_type=client_credentials" \
     -d "scope=$SCOPE" \
     -H "Content-Type: application/x-www-form-urlencoded" | jq -r .access_token)
