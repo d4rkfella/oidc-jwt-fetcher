@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -193,11 +194,13 @@ func readFile(path string) (string, error) {
 }
 
 func readResponseBody(body io.ReadCloser) (string, error) {
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
+	buf := make([]byte, 512)
+	n, err := body.Read(buf)
+	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
-	return string(data), nil
+
+	return string(buf[:n]), nil
 }
 
 func printError(msg string) {
