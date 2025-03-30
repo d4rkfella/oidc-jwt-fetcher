@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"net/http"
+	"net/url"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -24,33 +23,38 @@ type TokenResponse struct {
 }
 
 func main() {
-	if err := validateEnv(); err != nil {
-		printError(err.Error())
-		os.Exit(1)
-	}
-
-	token, err := getOIDCToken()
-	if err != nil {
-		printError(fmt.Sprintf("Failed to retrieve OIDC token: %v", err))
-		os.Exit(1)
-	}
-
-  namespace, err := getCurrentNamespace()
-	if err != nil {
-		printError(fmt.Sprintf("Failed to determine namespace: %v", err))
-		os.Exit(1)
-	}
-
-	if err := createOrUpdateSecret(token, namespace); err != nil {
-		printError(fmt.Sprintf("Secret operation failed: %v", err))
-		os.Exit(1)
+	if err := run(); err != nil {
+		printError(fmt.Sprintf("Error: %v", err))
+		os.Exit(2)
 	}
 
 	fmt.Println("\033[1;32mSuccessfully managed OIDC token secret\033[0m")
 }
 
+func run() error {
+	if err := validateEnv(); err != nil {
+		return fmt.Errorf("environment validation failed: %w", err)
+	}
+
+	token, err := getOIDCToken()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve OIDC token: %w", err)
+	}
+
+	namespace, err := getCurrentNamespace()
+	if err != nil {
+		return fmt.Errorf("failed to determine namespace: %w", err)
+	}
+
+	if err := createOrUpdateSecret(token, namespace); err != nil {
+		return fmt.Errorf("secret operation failed: %w", err)
+	}
+
+	return nil
+}
+
 func getCurrentNamespace() (string, error) {
-	if ns, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+	if ns, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
 		return string(ns), nil
 	}
 
@@ -86,9 +90,14 @@ func validateEnv() error {
 }
 
 func getOIDCToken() (string, error) {
+	clientSecret, err := readFile(os.Getenv("CLIENT_SECRET_FILE"))
+	if err != nil {
+		return "", err
+	}
+
 	values := url.Values{
 		"client_id":     []string{os.Getenv("CLIENT_ID")},
-		"client_secret": []string{readFile(os.Getenv("CLIENT_SECRET_FILE"))},
+		"client_secret": []string{clientSecret},
 		"grant_type":    []string{"client_credentials"},
 	}
 
@@ -103,8 +112,11 @@ func getOIDCToken() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return "", fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, string(body))
+		body, err := readResponseBody(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read token response body: %w", err)
+		}
+		return "", fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, body)
 	}
 
 	var tokenResp TokenResponse
@@ -172,12 +184,20 @@ func getK8sConfig() (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeconfig)
 }
 
-func readFile(path string) string {
-	data, err := ioutil.ReadFile(path)
+func readFile(path string) (string, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("failed to read file at %s: %v", path, err)
 	}
-	return strings.TrimSpace(string(data))
+	return strings.TrimSpace(string(data)), nil
+}
+
+func readResponseBody(body io.ReadCloser) (string, error) {
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+	return string(data), nil
 }
 
 func printError(msg string) {
