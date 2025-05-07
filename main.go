@@ -25,11 +25,12 @@ import (
 
 const (
 	defaultScopes           = "openid"
-	defaultSecretName       = "oidc-jwt"
+	defaultSecretName       = "oidc-token-secret"
 	defaultSecretKey        = "token"
 	defaultTokenTimeout     = 30 * time.Second
 	k8sListNamespaceTimeout = 1 * time.Minute
 	k8sSecretOpTimeout      = 30 * time.Second
+	TargetNamespacesEnvVar  = "TARGET_NAMESPACES"
 )
 
 type OIDCTokenResponse struct {
@@ -70,23 +71,50 @@ func main() {
 	}
 	log.Println("Successfully initialized Kubernetes client.")
 
-	log.Println("Listing all namespaces...")
-	listCtx, listCancel := context.WithTimeout(ctx, k8sListNamespaceTimeout)
-	defer listCancel()
-	namespaces, err := listNamespaces(listCtx, kubeClient)
-	if err != nil {
-		if listCtx.Err() == context.DeadlineExceeded {
-			log.Fatalf("Error listing namespaces: timeout after %v: %v", k8sListNamespaceTimeout, err)
-		} else if ctx.Err() == context.Canceled {
-			log.Printf("Shutdown signal received, namespace listing interrupted.")
-			return
-		}
-		log.Fatalf("Error listing namespaces: %v", err)
-	}
-	listCancel()
-	log.Printf("Found %d namespaces.", len(namespaces))
+	var namespacesToProcess []string
+	targetNamespacesStr := os.Getenv(TargetNamespacesEnvVar)
 
-	if err := processSecretsInNamespaces(ctx, kubeClient, namespaces, k8sSecretName, k8sSecretKey, accessToken); err != nil {
+	if targetNamespacesStr != "" {
+		log.Printf("TARGET_NAMESPACES is set: '%s'. Processing only these namespaces.", targetNamespacesStr)
+		namespacesToProcess = strings.Split(targetNamespacesStr, ",")
+		for i, ns := range namespacesToProcess {
+			namespacesToProcess[i] = strings.TrimSpace(ns)
+		}
+		var nonEmptyNamespaces []string
+		for _, ns := range namespacesToProcess {
+			if ns != "" {
+				nonEmptyNamespaces = append(nonEmptyNamespaces, ns)
+			}
+		}
+		namespacesToProcess = nonEmptyNamespaces
+		if len(namespacesToProcess) == 0 {
+			log.Println("TARGET_NAMESPACES was set but resulted in an empty list after parsing. No namespaces to process.")
+		}
+	} else {
+		log.Println("TARGET_NAMESPACES is not set or is empty. Attempting to list all namespaces in the cluster.")
+		listCtx, listCancel := context.WithTimeout(ctx, k8sListNamespaceTimeout)
+		defer listCancel()
+		namespacesFromCluster, listErr := listNamespaces(listCtx, kubeClient)
+		if listErr != nil {
+			if listCtx.Err() == context.DeadlineExceeded {
+				log.Fatalf("Error listing all namespaces: timeout after %v: %v", k8sListNamespaceTimeout, listErr)
+			} else if ctx.Err() == context.Canceled {
+				log.Printf("Shutdown signal received, namespace listing interrupted.")
+				return
+			}
+			log.Fatalf("Error listing all namespaces: %v", listErr)
+		}
+		listCancel()
+		namespacesToProcess = namespacesFromCluster
+	}
+
+	if len(namespacesToProcess) == 0 {
+		log.Println("No namespaces identified for processing. Exiting.")
+		return
+	}
+	log.Printf("Found %d namespaces to process: %v", len(namespacesToProcess), namespacesToProcess)
+
+	if err := processSecretsInNamespaces(ctx, kubeClient, namespacesToProcess, k8sSecretName, k8sSecretKey, accessToken); err != nil {
 		log.Printf("Processing namespaces finished with error/signal: %v", err)
 		return
 	}
