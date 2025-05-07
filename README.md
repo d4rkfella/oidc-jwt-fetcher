@@ -18,7 +18,6 @@ The application requires the following environment variables for configuration:
 - `OIDC_SCOPES`: (Optional) Space-separated scopes to request (e.g., "openid profile email"). Defaults to "openid".
 - `K8S_SECRET_NAME`: The name of the Kubernetes Secret to be created in each namespace (e.g., `oidc-token-secret`).
 - `K8S_SECRET_KEY`: The key within the Kubernetes Secret where the token will be stored (e.g., `token`).
-- `CRON_SCHEDULE`: The cron schedule for the job (e.g., `"0 * * * *"` for hourly). This is configured in the CronJob manifest.
 
 ## Permissions
 
