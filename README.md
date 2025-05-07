@@ -33,7 +33,3 @@ To build the Go application:
 go build -o oidc-jwt-fetcher main.go
 ```
 
-To build the Docker image:
-```bash
-docker build -t your-repo/oidc-jwt-fetcher:latest .
-``` 
