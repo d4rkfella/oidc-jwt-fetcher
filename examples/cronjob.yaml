@@ -1,0 +1,45 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: &app oidc-jwt-fetcher
+spec:
+  schedule: "*/55 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: *app
+        spec:
+          serviceAccountName: oidc-jwt-fetcher
+          containers:
+          - name: oidc-jwt-fetcher
+            image: ghcr.io/d4rkfella/oidc-jwt-fetcher:1.0.0@sha256:2fb91b78a650fdb8ab70520f264c2910f0ac62864743b33b217e37505e9a3883
+            imagePullPolicy: IfNotPresent
+            env:
+              - name: OIDC_CLIENT_ID
+                value: "<OIDC_CLIENT_ID>"
+              - name: OIDC_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: oidc-jwt-fetcher-secret
+                    key: client_secret
+              - name: OIDC_TOKEN_URL
+                value: "<OIDC_TOKEN_URL>"
+              - name: OIDC_SCOPES
+                value: "openid profile email"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 0
