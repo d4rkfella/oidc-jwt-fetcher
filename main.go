@@ -45,11 +45,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	go func() {
-		<-ctx.Done()
-		log.Println("Shutdown signal received, context cancelled. Attempting to exit gracefully...")
-	}()
-
 	tokenURL := getEnvOrDie("OIDC_TOKEN_URL")
 	clientID := getEnvOrDie("OIDC_CLIENT_ID")
 	clientSecret := getEnvOrDie("OIDC_CLIENT_SECRET")
